@@ -1,0 +1,39 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Sparrow CI tests
+on:
+  pull_request:
+  push:
+
+jobs:
+  e2e_simulation_test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - name: Build and run sparrow simulation
+        env:
+          MANIFEST_DIR: /manifest
+        # In github action, `GITHUB_WORKSPACE` is a builtin variable for the
+        # default location of the checkout action. To run the docker run CLI
+        # locally, set this variable to the manifest checkout location.
+        run: |
+          export DOCKER_SRC_DIR=${GITHUB_WORKSPACE}
+          docker run \
+            --rm \
+            --env "MANIFEST_DIR=${MANIFEST_DIR}" \
+            --mount="type=bind,src=${DOCKER_SRC_DIR},dst=${MANIFEST_DIR}" \
+            us-docker.pkg.dev/cerebra-shodan-ci-public/docker/sparrowci@sha256:bb9422e436b4c58eb973e2cd0c963ae8ac6a83cc740930fa169a6126438a7b4c \
+            "${MANIFEST_DIR}/github_scripts/sparrow_rpi3_cantrip_sim.sh"
